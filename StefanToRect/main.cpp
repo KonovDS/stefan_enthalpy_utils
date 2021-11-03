@@ -136,10 +136,15 @@ class Data {
   }
 };
 
-int main() {
-  Data d("s.vtk", "m.mesh");
+int main(int argc, char *argv[]) {
+  if (argc != 4) {
+    std::cout << "Not enough arguments";
+    exit(-1);
+  }
+  std::string s(argv[3]);
+  Data d(argv[1], argv[2]);
   d.Offset(0, -10); // Остров находится на донном грунте. Убираем его
-  d.Output("ice.vtk", "ice.txt", [](auto v) { return (v.material == 4 || v.material == 1) && v.temp < 0; });
-  d.Output("water.vtk", "water.txt", [](auto v) { return (v.material == 4 && v.temp >= 0) || v.material == 0; });
+  d.Output(s + "_ice.vtk", s + "_ice.txt", [](auto v) { return (v.material == 4 || v.material == 1) && v.temp < 0; });
+  d.Output(s + "_water.vtk", s + "_water.txt", [](auto v) { return (v.material == 4 && v.temp >= 0) || v.material == 0; });
   return 0;
 }
