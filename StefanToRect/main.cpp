@@ -2,6 +2,8 @@
 // Converts from Stefan vtk data and mesh to rect
 // TODO: ADD SUPPORT TO STRIDES != 1
 
+// Version 0.2 (jan 2022)
+
 #include <vector>
 #include <fstream>
 #include <string>
@@ -94,7 +96,7 @@ class Data {
     mesh.close();
   }
 
-  void Output(const std::string &vtk_path, const std::string &temp_path, bool (*f)(const Vertex&)) const {
+  void VTKOutput(const std::string &vtk_path, const std::string &temp_path, bool (*f)(const Vertex&)) const {
     std::ofstream out;
     std::vector<PointVTK2D> points;
     points.reserve(v.size());
@@ -128,6 +130,43 @@ class Data {
     std::cout << "[NOTICE] Successfully wrote " << num_points << " point data" << std::endl;
   }
 
+  ///
+  /// \param dat_path - path to output
+  /// \param f - temperature transform function
+  /// \param g - mask function
+  void PyPlotOutput(const std::string &dat_path, double (*f)(const Vertex&), bool (*g)(const Vertex&), int threshold) {
+    std::ofstream out;
+    out.open(dat_path);
+    if (!out.is_open()) {
+      std::cout << "[ERROR] Unable to open file \"" << dat_path << "\"" << std::endl;
+      exit(-1);
+    }
+    auto i = v.begin();
+    int num_points = 0;
+    while(!g(*i)) {
+      i++;
+    }
+    while(true) {
+      int line = 0;
+      while(g(*i)) {
+        if (threshold == 0 || line < threshold) {
+          out << f(*i) << " ";
+          num_points++;
+        }
+        i++;
+        line++;
+      }
+      out << std::endl;
+      while(!g(*i) && i != v.end()) {
+        i++;
+      }
+      if(i == v.end())
+        break;
+    }
+    out.close();
+    std::cout << "[NOTICE] Successfully wrote " << num_points << " point data" << std::endl;
+  }
+
   void Offset(double x, double z) {
     for(auto &i : v) {
       i.x += x;
@@ -136,6 +175,7 @@ class Data {
   }
 };
 
+/*
 int main(int argc, char *argv[]) {
   if (argc != 4) {
     std::cout << "Not enough arguments";
@@ -144,7 +184,21 @@ int main(int argc, char *argv[]) {
   std::string s(argv[3]);
   Data d(argv[1], argv[2]);
   d.Offset(0, -10); // Остров находится на донном грунте. Убираем его
-  d.Output(s + "_ice.vtk", s + "_ice.txt", [](auto v) { return (v.material == 4 || v.material == 1) && v.temp < 0; });
-  d.Output(s + "_water.vtk", s + "_water.txt", [](auto v) { return (v.material == 4 && v.temp >= 0) || v.material == 0; });
+  d.VTKOutput(s + "_ice.vtk", s + "_ice.txt", [](auto v) { return (v.material == 4 || v.material == 1) && v.temp < 0; });
+  d.VTKOutput(s + "_water.vtk",
+              s + "_water.txt",
+              [](auto v) { return (v.material == 4 && v.temp >= 0) || v.material == 0; });
+  return 0;
+}
+*/
+
+int main(int argc, char *argv[]) {
+  if (argc != 4) {
+    std::cout << "Not enough arguments";
+    exit(-1);
+  }
+  std::string s(argv[3]);
+  Data d(argv[1], argv[2]);
+  d.PyPlotOutput(s, [](auto v) { return v.temp; }, [](auto v) { return (v.material == 0 || v.material == 4); }, 100);
   return 0;
 }
