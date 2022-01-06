@@ -1,6 +1,7 @@
 # mesh_generator_2d.py by Konov D.S.
 # Creates an 2d stefan_enthalpy ascii .mesh file out of arbitrary shapes
 import math
+import stefan_enthalpy_utils.ui as ui
 
 
 class Shape:
@@ -53,8 +54,7 @@ class Medium:
 
     def __init__(self, width, height, hx, hy=None):
         if (width < 0) or (height < 0) or (hx < 0) or ((hy is not None) and (hy < 0)):
-            print('[ERROR] Medium should not receive negative values as arguments')
-            exit(-2)
+            ui.error("Medium should not receive negative values as arguments")
         self.w = width
         self.h = height
         if hy is None:
@@ -69,9 +69,7 @@ class Medium:
         for shape in reversed(self.shapes):
             if shape[1].lies(x, y):
                 return shape[0]
-        print('[ERROR] Some parts of the medium are left without material')
-        print('[NOTICE] You should set shapes to cover all of the medium')
-        exit(-1)
+        ui.error("Some parts of the medium are left without material")
 
     def write(self, path):
         hx = self.w / self.nx
@@ -79,12 +77,14 @@ class Medium:
         f = open(path, "w")
         f.write("%d %d\n" % (self.nx + 1, self.ny + 1))
         f.write("%f %f\n" % (self.w, self.h))
+        ui.start_progress(self.ny + 1)
         for iy in range(self.ny + 1):
+            ui.increase_progress()
             for ix in range(self.nx + 1):
                 f.write("%d " % self.find(ix * hx, iy * hy))
             f.write("\n")
         f.close()
-        print('[NOTICE] Mesh at "%s" generated successfully' % path)
+        ui.notice("Mesh at \"%s\" generated successfully" % path)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@
 import math
 import struct
 
+
 class Shape:
     # Redefinition of this method in derivative classes may achieve desired form of the shape
     def lies(self, x, y):

@@ -142,7 +142,9 @@ class Task:
                 s += "  "
             f.write(s + '</%s>' % tag_name + "\n")
 
-
+        # Sorting of the materials and inistates:
+        self.initial_temps_submesh.sort(key=lambda tup: tup[0])
+        self.materials.sort(key=lambda tup: tup[0])
         # Start of xml tree
 
         open_tag("Settings", ("dimsCount", ), ("%d" % self.dim, ))
