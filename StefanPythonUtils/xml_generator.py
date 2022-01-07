@@ -62,17 +62,18 @@ class Boundary:
 
 
 class Task:
-    materials = []
-    effects = []
-    boundaries = []
-    initial_temps_submesh = []
-    initial_temps_pernode_path = ""
+    
 
     def __init__(self, dim, mesh_path):
         self.dim = dim
         self.mesh_path = mesh_path
         self.vtk = None
         self.time = None
+        self.materials = []
+        self.effects = []
+        self.boundaries = []
+        self.initial_temps_submesh = []
+        self.initial_temps_pernode_path = ""
 
     def add_material(self, index, material: Material):
         if index in [x for x in self.materials if x[0] == index]:
