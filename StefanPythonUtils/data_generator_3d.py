@@ -65,7 +65,7 @@ class CubeGradZ(Shape3D):
             return False
 
     def temp(self, x, y, z):
-        return float(self.temp_down + (self.temp_up - self.temp_down) * (z - self.z0))
+        return float(self.temp_down + (self.temp_up - self.temp_down) * (z - self.z0) / self.h)
 
 
 class Medium3D:
