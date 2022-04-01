@@ -3,7 +3,7 @@
 # Version 0.2
 import math
 import struct
-
+import stefan_enthalpy_utils.ui as ui
 
 class Shape:
     # Redefinition of this method in derivative classes may achieve desired form of the shape
@@ -55,7 +55,7 @@ class Medium:
 
     def __init__(self, width, height, hx, hy=None):
         if (width < 0) or (height < 0) or (hx < 0) or ((hy is not None) and (hy < 0)):
-            print('[ERROR] Medium should not receive negative values as arguments')
+            ui.error("Medium should not receive negative values as arguments")
             exit(-2)
         self.w = width
         self.h = height
@@ -71,8 +71,7 @@ class Medium:
         for shape in reversed(self.shapes):
             if shape[1].lies(x, y):
                 return shape[0]
-        print('[ERROR] Some parts of the medium are left without material. Exiting')
-        print('[NOTICE] You should set shapes to cover all of the medium')
+        ui.error("Some parts of the medium are left without temperature data")
         exit(-1)
 
     def write(self, path):
@@ -85,7 +84,7 @@ class Medium:
         f = open(path, "wb")
         f.write(struct.pack("<%ud" % len(temperature), *temperature))		
         f.close()
-        print('[NOTICE] Mesh at "%s" generated successfully' % path)
+        ui.notice("Data at \"%s\" generated successfully" % path)
 
 
 if __name__ == "__main__":

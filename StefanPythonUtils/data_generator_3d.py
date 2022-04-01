@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import struct
 import math
+import stefan_enthalpy_utils.ui as ui
 
 
 class Shape3D:
@@ -27,14 +28,14 @@ def segment(base: float, length: float, value: float):
 
 
 class Cube(Shape3D):
-    def __init__(self, x0, y0, z0, w, l, h, ttemp):
+    def __init__(self, x0, y0, z0, w, l, h, cube_temp):
         self.x0 = x0
         self.y0 = y0
         self.z0 = z0
         self.w = w
         self.l = l
         self.h = h
-        self.ttemp = ttemp
+        self.cube_temp = cube_temp
 
     def lies(self, x, y, z):
         if segment(self.x0, self.w, x) and segment(self.y0, self.l, y) and segment(self.z0, self.h, z):
@@ -43,7 +44,7 @@ class Cube(Shape3D):
             return False
 
     def temp(self, x, y, z):
-        return float(self.ttemp)
+        return float(self.cube_temp)
 
 
 class CubeGradZ(Shape3D):
@@ -73,7 +74,7 @@ class Medium3D:
     def __init__(self, width, length, height, hx, hy=None, hz=None):
         if (width < 0) or (length < 0) or (height < 0) or (hx < 0) or ((hy is not None) and (hy < 0)) or (
                 (hz is not None) and (hz < 0)):
-            print('[ERROR] Medium should not receive negative values as arguments')
+            ui.error("Medium should not receive negative values as arguments")
             exit(-2)
         self.w = width
         self.h = height
@@ -93,8 +94,7 @@ class Medium3D:
         for shape in reversed(self.shapes):
             if shape.lies(x, y, z):
                 return shape.temp(x, y, z)
-        print('[ERROR] Some parts of the medium are left without material')
-        print('[NOTICE] You should set shapes to cover all of the medium')
+        ui.error("Some parts of the medium are left without temperature data")
         exit(-1)
 
     def temp_list(self):
@@ -113,3 +113,4 @@ class Medium3D:
         f = open(path, "wb")
         f.write(struct.pack("<%ud" % len(ret), *ret))
         f.close()
+        ui.notice("Data at \"%s\" generated successfully" % path)

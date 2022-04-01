@@ -1,6 +1,7 @@
 # xml_generator.py by Konov D.S.
 # Creates a stefan_enthalpy xml config file
 import os
+import stefan_enthalpy_utils.ui as ui
 
 
 class Material:
@@ -27,10 +28,10 @@ class Effect:
 
     def __init__(self, effect_type, parameters):
         if effect_type not in self.types:
-            print('[ERROR] Incorrect effect "%s"' % effect_type)
+            ui.error('Incorrect effect "%s"' % effect_type)
             exit(-1)
         if len(parameters) != len(self.types[effect_type][1]):
-            print('[ERROR] Not enough parameters for effect "%s"' % effect_type)
+            ui.error('Not enough parameters for effect "%s"' % effect_type)
             exit(-1)
         self.out = (self.types[effect_type][0], list(self.types[effect_type][1]), list(parameters))
 
@@ -53,16 +54,15 @@ class Boundary:
 
     def __init__(self, boundary_type, parameters):
         if boundary_type not in self.types:
-            print('[ERROR] Incorrect boundary type "%s"' % boundary_type)
+            ui.error('Incorrect boundary type "%s"' % boundary_type)
             exit(-1)
         if len(parameters) != len(self.types[boundary_type][1]):
-            print('[ERROR] Not enough parameters for boundary type "%s"' % boundary_type)
+            ui.error('Not enough parameters for boundary type "%s"' % boundary_type)
             exit(-1)
         self.out = (self.types[boundary_type][0], list(self.types[boundary_type][1]), list(parameters))
 
 
 class Task:
-    
 
     def __init__(self, dim, mesh_path):
         self.dim = dim
@@ -77,7 +77,7 @@ class Task:
 
     def add_material(self, index, material: Material):
         if index in [x for x in self.materials if x[0] == index]:
-            print('[ERROR] Multiple materials can not have the same index')
+            ui.error('Multiple materials can not have the same index')
             exit(-1)
         self.materials.append((index, material))
 
@@ -86,7 +86,7 @@ class Task:
 
     def add_boundary(self, axis, side, boundary: Boundary):
         if axis not in Boundary.axises or side not in Boundary.sides:
-            print('[ERROR] Incorrect boundary "%s", "%d"' % axis, side)
+            ui.error('Incorrect boundary "%s", "%d"' % axis, side)
             exit(-1)
         side_num = Boundary.sides[side]
         self.boundaries.append((axis, side_num, boundary, ))
@@ -119,7 +119,7 @@ class Task:
             nonlocal count
             nonlocal f
             if len(attributes) != len(values):
-                print('[ERROR] Internal error during "%s"' % tag_name)
+                ui.error('Internal error during "%s"' % tag_name)
                 exit(-1)
             s = ''
             for i in range(0, count):
@@ -198,7 +198,8 @@ class Task:
         close_tag("Task")
         close_tag("Settings")
         f.close()
-        print('[NOTICE] XML config at "%s" generated successfully' % path)
+
+        ui.notice('XML config at "%s" generated successfully' % path)
 
 
 if __name__ == "__main__":

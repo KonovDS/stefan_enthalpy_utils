@@ -1,6 +1,7 @@
 # mesh_generator_3d.py by Konov D.S.
 # Creates an 3d stefan_enthalpy ascii .mesh file out of arbitrary shapes
 import math
+import stefan_enthalpy_utils.ui as ui
 
 
 class Shape3D:
@@ -56,7 +57,7 @@ class Medium3D:
     def __init__(self, width, length, height, hx, hy=None, hz=None):
         if (width < 0) or (length < 0) or (height < 0) or (hx < 0) or ((hy is not None) and (hy < 0)) or (
                 (hz is not None) and (hz < 0)):
-            print('[ERROR] Medium should not receive negative values as arguments')
+            ui.error("Medium should not receive negative values as arguments")
             exit(-2)
         self.w = width
         self.h = height
@@ -76,8 +77,7 @@ class Medium3D:
         for shape in reversed(self.shapes):
             if shape[1].lies(x, y, z):
                 return shape[0]
-        print('[ERROR] Some parts of the medium are left without material')
-        print('[NOTICE] You should set shapes to cover all of the medium')
+        ui.error("Some parts of the medium are left without material")
         exit(-1)
 
     def write(self, path):
@@ -87,13 +87,15 @@ class Medium3D:
         f = open(path, "w")
         f.write("%d %d %d\n" % (self.nx + 1, self.ny + 1, self.nz + 1))
         f.write("%f %f %f\n" % (self.w, self.l, self.h))
+        ui.start_progress(self.nz + 1)
         for iz in range(self.nz + 1):
+            ui.increase_progress()
             for iy in range(self.ny + 1):
                 for ix in range(self.nx + 1):
                     f.write("%d " % self.find(ix * hx, iy * hy, iz * hz))
                 f.write("\n")
         f.close()
-        print('[NOTICE] Mesh at "%s" generated successfully' % path)
+        ui.notice("Mesh at \"%s\" generated successfully" % path)
 
 
 if __name__ == "__main__":

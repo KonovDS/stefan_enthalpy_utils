@@ -45,8 +45,13 @@ def write(path, temperature):
     print('[NOTICE] Mesh at "%s" generated successfully' % path)
 
 
-if __name__ == "__main__":
+def vtk_to_data(inp, out, stride, size):
+    temp = read(inp, size[0] * size[1] / (stride[0] * stride[1]))
+    temp = enlarge(temp, stride, size)
+    write(out, temp)
 
+
+def main():
     filename = "start_temp.vtk"
     output = "vtk_out.data"
     stride = [2, 2]
@@ -55,3 +60,7 @@ if __name__ == "__main__":
     temperature = read(filename, size[0] * size[1] / (stride[0] * stride[1]))
     temperature = enlarge(temperature, stride, size)
     write(output, temperature)
+
+
+if __name__ == "__main__":
+    main()
