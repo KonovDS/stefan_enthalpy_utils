@@ -49,7 +49,7 @@ class Circle(Shape):
             return False
 
 
-class Medium:
+class Medium2D:
     shapes = []
 
     def __init__(self, width, height, hx, hy=None):
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     #              w   h   hx
     u = 10.0
     t = 0.05 * 3
-    m = Medium(300.05, 10.05 + u, 0.05)
+    m = Medium2D(300.05, 10.05 + u, 0.05)
     
     m.add_shape(3, Rect(0, 0, 300.05, u))
     m.add_shape(0, Rect(0, u + 0, 300.05, 10.05)) #Вода

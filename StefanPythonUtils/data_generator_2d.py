@@ -1,56 +1,70 @@
-# data_generator_2d.py by Konov D.S.
+# data_generator_3d.py by Konov D.S.
 # Creates an 2d stefan_enthalpy binary _temperature.data file out of arbitrary shapes
-# Version 0.2
-import math
+# Version 0.3
+import numpy as np
+import sys
 import struct
+import math
 import stefan_enthalpy_utils.ui as ui
 
-class Shape:
+
+class Shape2D:
     # Redefinition of this method in derivative classes may achieve desired form of the shape
     def lies(self, x, y):
         return False
 
+    def temp(self, x, y):
+        return float(0)
 
-class Rect(Shape):
-    def __init__(self, x, y, w, h):
-        self.x = x
-        self.y = y
+
+def segment(base: float, length: float, value: float):
+    if length < 0:
+        base += length
+        length = -length
+    if base <= value <= base + length:
+        return True
+    else:
+        return False
+
+
+class Rect(Shape2D):
+    def __init__(self, x0, y0, w, h, cube_temp):
+        self.x0 = x0
+        self.y0 = y0
         self.w = w
         self.h = h
+        self.cube_temp = cube_temp
 
     def lies(self, x, y):
-
-        def segment(base: float, length: float, value: float):
-            if length < 0:
-                base += length
-                length = -length
-            if base <= value <= base + length:
-                return True
-            else:
-                return False
-
-        if segment(self.x, self.w, x) and segment(self.y, self.h, y):
+        if segment(self.x0, self.w, x) and segment(self.y0, self.h, y):
             return True
         else:
             return False
 
+    def temp(self, x, y):
+        return float(self.cube_temp)
 
-class Circle(Shape):
-    def __init__(self, x, y, r):
-        self.x = x
-        self.y = y
-        self.r = r
+
+class RectGradZ(Shape2D):
+    def __init__(self, x0, y0, w, h, temp_up, temp_down):
+        self.x0 = x0
+        self.y0 = y0
+        self.w = w
+        self.h = h
+        self.temp_up = temp_up
+        self.temp_down = temp_down
 
     def lies(self, x, y):
-        dx = x - self.x
-        dy = y - self.y
-        if dx * dx + dy * dy <= self.r * self.r:
+        if segment(self.x0, self.w, x) and segment(self.y0, self.h, y):
             return True
         else:
             return False
 
+    def temp(self, x, y):
+        return float(self.temp_down + (self.temp_up - self.temp_down) * (y - self.y0) / self.h)
 
-class Medium:
+
+class Medium2D:
     shapes = []
 
     def __init__(self, width, height, hx, hy=None):
@@ -64,32 +78,28 @@ class Medium:
         self.nx = int(math.ceil(self.w / hx))
         self.ny = int(math.ceil(self.h / hy))
 
-    def add_shape(self, temp: float, shape: Shape):
-        self.shapes.append((temp, shape))
+    def add_shape(self, shape: Shape2D):
+        self.shapes.append(shape)
 
     def find(self, x, y):
         for shape in reversed(self.shapes):
-            if shape[1].lies(x, y):
-                return shape[0]
+            if shape.lies(x, y):
+                return shape.temp(x, y)
         ui.error("Some parts of the medium are left without temperature data")
         exit(-1)
 
-    def write(self, path):
+    def temp_list(self):
+        ret = []
         hx = self.w / self.nx
         hy = self.h / self.ny
-        temperature = []
         for iy in range(self.ny + 1):
             for ix in range(self.nx + 1):
-                temperature.append(self.find(ix * hx, iy * hy))
+                ret.append(float(self.find(ix * hx, iy * hy)))
+        return ret
+
+    def write(self, path):
+        ret = self.temp_list()
         f = open(path, "wb")
-        f.write(struct.pack("<%ud" % len(temperature), *temperature))		
+        f.write(struct.pack("<%ud" % len(ret), *ret))
         f.close()
         ui.notice("Data at \"%s\" generated successfully" % path)
-
-
-if __name__ == "__main__":
-    #          w   h   hx
-    m = Medium(300.0, 10.0, 0.05)
-    #    Temperature   	  x  y  w      h
-    m.add_shape(-40, Rect(0, 0, 300.0, 10.0))
-    m.write("./my_temperature.data")
